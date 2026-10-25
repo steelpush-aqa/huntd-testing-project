@@ -1,75 +1,116 @@
 # Huntd QA Portfolio
 
-## About
+**Web & Android Testing · GraphQL Investigation · Defect Analysis · Test Documentation**
 
-This portfolio showcases testing artifacts created while testing Huntd — a web3-oriented recruitment platform with shared GraphQL backend services across web and mobile applications.
+A QA portfolio documenting testing of Huntd, a web3-oriented recruitment platform with shared GraphQL backend services across web and mobile applications.
 
-My approach extends beyond identifying defects to investigating reproduction conditions, isolating failure triggers, and forming evidence-based root cause hypotheses using browser DevTools, GraphQL analysis, ADB logcat, and database error investigation.
+The work focuses on more than reporting symptoms: reproducing failures, isolating triggering conditions, comparing client and backend behavior, and building evidence-based root-cause hypotheses with browser DevTools, GraphQL response analysis, Apollo cache inspection, ADB logcat, and database error investigation.
 
----
+## Navigation
+
+- [Overview](#overview)
+- [Key Findings](#key-findings)
+- [Bug Showcase](#bug-showcase)
+- [Cross-Module Defect Patterns](#cross-module-defect-patterns)
+- [Test Documentation](#test-documentation)
+- [Web Testing Artifacts](#web-testing-artifacts)
+- [Mobile Testing Artifacts](#mobile-testing-artifacts)
+- [Skills Demonstrated](#skills-demonstrated)
+- [Repository Structure](#repository-structure)
+
+## Overview
+
+This repository contains testing artifacts for both the web and Android applications, including test planning, requirements traceability, test-run summaries, defect reports, and supporting screenshots.
+
+| Area | Artifacts |
+|---|---|
+| Test planning | [Test Plan](test-plan.md) |
+| Permissions | [Permission Testing Table](permission-testing-table.md) |
+| Web application | [Defect Reports](web-app/defect-reports/), [RTM](web-app/requirements-traceability-matrix.md), [TestRail Run Summary](web-app/testrail-test-runs-summary.md) |
+| Mobile application | [Defect Reports](mobile-app/defect-reports/), [RTM](mobile-app/requirements-traceability-matrix.md), [TestRail Run Summary](mobile-app/testrail-test-runs-summary.md) |
+
+## Key Findings
+
+The examples below illustrate issues that required investigation beyond surface-level functional testing.
+
+- **Database constraint and transaction failure:** A `varchar(255)` constraint without a corresponding client-side guard caused silent data loss in multiple flows. During creation, PostgreSQL error `25P02` aborted the transaction block and prevented subsequent saves until page reload, without clear user feedback.
+- **Broken recruiter–candidate relationship continuity:** Profile IDs regenerated during edit cycles (`13173 → 13176 → 13179)), causing duplicate chats, inflated contact history, and previously contacted candidates to appear new.
+- **OAuth state inconsistency:** Cancelled authorization attempts left ghost tokens in the database. Apollo cache inspection showed all three providers using the same `providerId` from the initiating account.
+- **Invisible tooltip intercepting clicks:** A `Tooltip_toolTipTop__G_POy` element with `opacity: 0` remained in the DOM at `z-index: 12`, intercepting clicks on modal dialogs across five pages.
+- **Role-specific pagination crash:** The Candidates List crashed for Recruiter during pagination when code accessed `workPlaces[n].title` on a profile where `workPlaces: null`. The Candidate role was unaffected with the same data up to offset 400.
+- **Deleted chat records and failed messaging:** Deleted chat records persisted in the database. Messaging to deleted chats succeeded, then subsequent send attempts triggered `SequelizeUniqueConstraintError` (`code: 23505`); the behavior was investigated for both Recruiter and Candidate roles.
+
+## Bug Showcase
+
+Selected defect reports demonstrating reproduction, technical investigation, and supporting evidence.
+
+| Report | Finding | Investigation |
+|---|---|---|
+| [HUNTD-62](web-app/defect-reports/HUNTD-62-list-crashes-on-workplace-null.md) | Candidates List crashes for Recruiter during pagination | Isolated the role-specific crash and identified offending profiles through a DevTools console query at the failing offset |
+| [HUNTD-58](web-app/defect-reports/HUNTD-58-duplicate-chats-and-contact-his.md) | Profile reactivation creates duplicate chats and inflates contact history | Traced profile ID regeneration across edit cycles and its effect on existing recruiter–candidate relationships |
+| [HUNTD-73](web-app/defect-reports/HUNTD-73-cancelled-oauth-creates-connections.md) | Cancelled OAuth attempts persist ghost tokens for all three providers | Compared provider state and confirmed the shared `providerId` through Apollo cache inspection |
+| [HUNTD-65](web-app/defect-reports/HUNTD-65-chat-records-persist-after-deletion.md) | Deleted chats persist and subsequent messaging triggers a uniqueness error | Analysed GraphQL mutations for both roles and captured error `23505` |
+| [HUNTD-81](web-app/defect-reports/HUNTD-81-form-creation-resets-on-255-char-limit.md) | `varchar(255)` violation triggers PostgreSQL `25P02` | Followed the failure beyond the initial mutation to identify its effect on later saves in the same session |
+
+Browse the complete [web defect-report directory](web-app/defect-reports/) and [mobile defect-report directory](mobile-app/defect-reports/).
+
+## Cross-Module Defect Patterns
+
+Testing revealed recurring defect classes across otherwise unrelated areas of the application.
+
+- **Silent persistence failures:** the same `varchar(255)` root cause affected Experience create/edit flows and Recruiter Company Details, with different symptoms including silent discard, form reset, and transaction abort.
+- **UI state not reset after interaction:** disabled OAuth buttons stayed disabled; deleted-chat UI remained visible; ghost tokens persisted; and required-field validation was not re-triggered after clearing fields.
+- **Shared component defects:** the Tooltip component, Technologies multi-select, Job Experience dropdown, and salary fields showed repeated problems across pages where the components were reused.
+
+Recognising these patterns helps distinguish isolated symptoms from defects that may have a shared underlying cause.
+
+## Test Documentation
+
+- [Test Plan](test-plan.md) — scope, approach, and planning artifacts.
+- [Permission Testing Table](permission-testing-table.md) — role and permission-focused coverage.
+
+## Web Testing Artifacts
+
+- [Web defect reports](web-app/defect-reports/)
+- [Web evidence screenshots](web-app/evidence-screenshots/)
+- [Requirements Traceability Matrix](web-app/requirements-traceability-matrix.md)
+- [TestRail test-run summary](web-app/testrail-test-runs-summary.md)
+
+## Mobile Testing Artifacts
+
+- [Mobile defect reports](mobile-app/defect-reports/)
+- [Mobile evidence screenshots](mobile-app/evidence-screenshots/)
+- [Requirements Traceability Matrix](mobile-app/requirements-traceability-matrix.md)
+- [TestRail test-run summary](mobile-app/testrail-test-runs-summary.md)
+
+## Skills Demonstrated
+
+- **Test design:** equivalence partitioning, boundary value analysis, decision table testing, state transition testing, and use case testing.
+- **Grey-box investigation:** DevTools Network, Console, and Elements panels; GraphQL mutation and response analysis; Apollo cache inspection; and ADB logcat.
+- **Mobile testing:** Android device testing, ADB through PowerShell, scrcpy screen mirroring, and React Native error identification.
+- **Defect reporting:** reproducible steps, evidence collection, root-cause hypotheses, and cross-module pattern recognition.
+- **Test management:** TestRail test cases, runs, and reports; Jira bug tracking, epics, and stories.
+- **Documentation:** test planning, requirements traceability, permission testing, and test-run summaries.
 
 ## Repository Structure
 
-```
+```text
+.
 ├── README.md
 ├── test-plan.md
 ├── permission-testing-table.md
 ├── web-app/
-│   ├── defect-reports/             
+│   ├── defect-reports/
 │   ├── evidence-screenshots/
-│   ├── jira-test-runs-summary.md
+│   ├── testrail-test-runs-summary.md
 │   └── requirements-traceability-matrix.md
 └── mobile-app/
-    ├── defect-reports/             
+    ├── defect-reports/
     ├── evidence-screenshots/
-    ├── jira-test-runs-summary.md
+    ├── testrail-test-runs-summary.md
     └── requirements-traceability-matrix.md
 ```
 
 ---
 
-## Key Findings
-
-Selected findings that required investigation beyond the surface:
-
-- A `varchar(255)` database constraint with no client-side guard caused silent data loss across multiple flows. On creation, the failure triggered PostgreSQL error `25P02` — aborting the entire transaction block and silently blocking all subsequent saves until page reload, without any user feedback.
-- Profile ID regeneration on edit cycles broke recruiter-candidate relationship continuity — duplicate chats created, contact history inflated, previously contacted candidates reappearing as new. Confirmed by tracing profile IDs across edit cycles (`candidateProfileId: 13173 → 13176 → 13179`).
-- Cancelled OAuth authorization attempts persisted ghost tokens in the database. All three providers shared the same `providerId` from the initiating account — confirmed via Apollo cache inspection.
-- A `Tooltip_toolTipTop__G_POy` component using `opacity: 0` instead of `display: none` remained in the DOM with `z-index: 12`, intercepting clicks on modal dialogs (`z-index: auto`) across five separate pages.
-- Candidates List page crashed for Recruiter role during pagination due to unguarded `workPlaces[n].title` access on a profile with `workPlaces: null`. Isolated via DevTools console query; Candidate role unaffected up to offset 400.
-- Deleted chat records persisted in the database. Cross-party messaging to deleted chats succeeded, triggering `SequelizeUniqueConstraintError` (`code: 23505`) on subsequent send attempts — captured via GraphQL mutation analysis for both Recruiter and Candidate roles.
-
----
-
-## Cross-Module Defect Patterns
-
-Testing revealed recurring bug classes that crossed module boundaries:
-
-- **`varchar(255)` silent failure** — same root cause across Experience page (create and edit flows) and Recruiter Company Details, each with a different failure mode: silent discard, form reset, or full mutation abort
-- **React state not reset after user interaction** — disabled OAuth buttons not re-enabled, deleted chat UI remaining visible, ghost tokens persisting, required field validation not re-triggered after clear-all — unrelated components, same class of bug
-- **Shared component reuse propagating bugs** — `Tooltip` component, `Technologies` multi-select, `Job Experience` dropdown, and salary fields all exhibited identical defects across every page they appeared on
-
----
-
-## Bug Showcase
-
-A selection of findings that required investigation beyond the surface:
-
-| Report | Finding | Investigation |
-|---|---|---|
-| [HUNTD-62](./web-app/defect-reports/HUNTD-62-list-crashes-on-workplace-null.md) | Candidates List crashes for Recruiter role during pagination | Production crash isolated by role — Candidate unaffected on identical data. Offending profiles identified via DevTools console query at crash offset |
-| [HUNTD-58](./web-app/defect-reports/HUNTD-58-duplicate-chats-and-contact-his.md) | Profile reactivation creates duplicate chats and inflates contact history | Architectural finding — profile ID regeneration traced across edit cycles (`candidateProfileId: 13173 → 13176 → 13179`) breaking all existing recruiter-candidate relationships |
-| [HUNTD-73](./web-app/defect-reports/HUNTD-73-cancelled-oauth-creates-connections.md) | Cancelled OAuth attempts persist ghost tokens for all three providers | All providers sharing the same `providerId` from the initiating account — confirmed via Apollo cache inspection |
-| [HUNTD-65](./web-app/defect-reports/HUNTD-65-chat-records-persist-after-deletion.md) | Deleted chats persist in DB and trigger `SequelizeUniqueConstraintError` on subsequent messages | Full GraphQL mutation analysis for both Recruiter and Candidate roles — `code: 23505` captured in both directions |
-| [HUNTD-81](./web-app/defect-reports/HUNTD-81-form-creation-resets-on-255-char-limit.md) | `varchar(255)` violation triggers PostgreSQL `25P02` transaction abort | Not only does the creation fail silently — the aborted transaction blocks all subsequent saves in the same session until page reload |
-
----
-
-## Skills Demonstrated
-
-- **Test design** — equivalence partitioning, boundary value analysis, decision table testing, state transition testing, use case testing
-- **Grey-box investigation** — browser DevTools (Network, Console, Elements), GraphQL mutation and response analysis, Apollo cache inspection, ADB logcat
-- **Mobile testing** — physical device testing on Android, ADB via PowerShell, scrcpy screen mirroring, React Native error identification
-- **Defect reporting** — root cause investigation before filing, systemic pattern recognition across modules
-- **Test management** — TestRail (test cases, runs, reports), Jira (bug tracking, epics, stories)
-- **Documentation** — Test Plan, RTM, Permission Testing Table, Test Summary Report (ISTQB Foundation Level)
+[Back to top](#huntd-qa-portfolio)
