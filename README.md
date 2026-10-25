@@ -34,7 +34,7 @@ This repository contains testing artifacts for both the web and Android applicat
 The examples below illustrate issues that required investigation beyond surface-level functional testing.
 
 - **Database constraint and transaction failure:** A `varchar(255)` constraint without a corresponding client-side guard caused silent data loss in multiple flows. During creation, PostgreSQL error `25P02` aborted the transaction block and prevented subsequent saves until page reload, without clear user feedback.
-- **Broken recruiter–candidate relationship continuity:** Profile IDs regenerated during edit cycles (`13173 → 13176 → 13179)), causing duplicate chats, inflated contact history, and previously contacted candidates to appear new.
+- **Broken recruiter–candidate relationship continuity:** Profile IDs regenerated during edit cycles (`13173 → 13176 → 13179`), causing duplicate chats, inflated contact history, and previously contacted candidates to appear new.
 - **OAuth state inconsistency:** Cancelled authorization attempts left ghost tokens in the database. Apollo cache inspection showed all three providers using the same `providerId` from the initiating account.
 - **Invisible tooltip intercepting clicks:** A `Tooltip_toolTipTop__G_POy` element with `opacity: 0` remained in the DOM at `z-index: 12`, intercepting clicks on modal dialogs across five pages.
 - **Role-specific pagination crash:** The Candidates List crashed for Recruiter during pagination when code accessed `workPlaces[n].title` on a profile where `workPlaces: null`. The Candidate role was unaffected with the same data up to offset 400.
