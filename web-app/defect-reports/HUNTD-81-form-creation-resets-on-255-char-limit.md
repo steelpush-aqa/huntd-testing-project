@@ -1,4 +1,4 @@
-# HUNTD-81 — Experience Entry Creation Form on Candidate Experience Page Resets to Empty State Without Error Feedback When Input Exceeds 255 Character Limit
+# HUNTD-81 — Experience Entry Creation form on Candidate Experience Page resets to empty state without error when input exceeds 255 character limit
 
 **Severity:** Critical  
 **Priority:** High
